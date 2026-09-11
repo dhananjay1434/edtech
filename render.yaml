@@ -1,6 +1,7 @@
 ﻿services:
   - type: web
     name: cde-backend
+    plan: free
     env: python
     buildCommand: pip install -r requirements.lock
     startCommand: bash start.sh
@@ -22,6 +23,7 @@
 
   - type: web
     name: cde-auth
+    plan: free
     env: docker
     dockerfilePath: Dockerfile.keycloak
     envVars:
@@ -29,3 +31,4 @@
         value: admin
       - key: KEYCLOAK_ADMIN_PASSWORD
         value: admin
+
