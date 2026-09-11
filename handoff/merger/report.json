@@ -1,0 +1,18 @@
+{
+  "agent": "merger",
+  "status": "blocked",
+  "base_commit": "6038019",
+  "code_commit": "",
+  "contract_version": "1.0",
+  "contract_sha256": "unknown",
+  "source_hashes": {},
+  "owned_paths": ["docs/integration", "tests/merger", "handoff/merger", "cde/api.py", "cde/merger_adapters.py", "cde/gamma/review_handlers.py"],
+  "files": [],
+  "commands": ["python tools/run_tests.py --agent merger --tier unit -- tests/alpha/unit tests/beta/unit tests/gamma/unit"],
+  "migrations_required": [],
+  "contracts_changed": [],
+  "integration_exports": [],
+  "external_gates": [],
+  "open_gaps": ["tests/gamma/unit missing", "Gamma test suites missing"],
+  "next_step": "Gamma must provide missing test suites."
+}

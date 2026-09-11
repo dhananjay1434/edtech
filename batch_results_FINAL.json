@@ -1,0 +1,112 @@
+{
+  "page_1.png": {
+    "review_count": 8,
+    "blank_count": 6,
+    "ambiguous_questions": [
+      26,
+      36,
+      51,
+      53,
+      55,
+      65,
+      144,
+      180
+    ]
+  },
+  "page_10.png": {
+    "review_count": 5,
+    "blank_count": 1,
+    "ambiguous_questions": [
+      28,
+      73,
+      75,
+      77,
+      84
+    ]
+  },
+  "page_2.png": {
+    "review_count": 7,
+    "blank_count": 4,
+    "ambiguous_questions": [
+      17,
+      32,
+      37,
+      46,
+      82,
+      116,
+      166
+    ]
+  },
+  "page_3.png": {
+    "review_count": 0,
+    "blank_count": 0,
+    "ambiguous_questions": []
+  },
+  "page_4.png": {
+    "review_count": 5,
+    "blank_count": 2,
+    "ambiguous_questions": [
+      32,
+      36,
+      60,
+      84,
+      101
+    ]
+  },
+  "page_5.png": {
+    "review_count": 5,
+    "blank_count": 1,
+    "ambiguous_questions": [
+      18,
+      19,
+      32,
+      87,
+      161
+    ]
+  },
+  "page_6.png": {
+    "review_count": 9,
+    "blank_count": 7,
+    "ambiguous_questions": [
+      15,
+      16,
+      17,
+      56,
+      93,
+      127,
+      145,
+      146,
+      180
+    ]
+  },
+  "page_7.png": {
+    "review_count": 6,
+    "blank_count": 0,
+    "ambiguous_questions": [
+      29,
+      32,
+      77,
+      84,
+      148,
+      164
+    ]
+  },
+  "page_8.png": {
+    "review_count": 3,
+    "blank_count": 2,
+    "ambiguous_questions": [
+      145,
+      146,
+      180
+    ]
+  },
+  "page_9.png": {
+    "review_count": 3,
+    "blank_count": 0,
+    "ambiguous_questions": [
+      73,
+      82,
+      148
+    ]
+  }
+}

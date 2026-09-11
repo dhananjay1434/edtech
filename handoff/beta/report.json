@@ -1,0 +1,54 @@
+{
+  "agent": "beta",
+  "status": "blocked",
+  "base_commit": "6038019",
+  "code_commit": "69b345f8a9952b80caabae6cc87474fbcd986335",
+  "contract_version": "1.0",
+  "contract_sha256": "placeholder",
+  "source_hashes": {},
+  "owned_paths": [
+    "cde/omr_adapter.py",
+    "cde/grading_core.py",
+    "cde/grading.py",
+    "cde/review.py",
+    "cde/stages.py",
+    "cde/dispatcher.py",
+    "cde/workflows.py",
+    "cde/activities.py",
+    "cde/worker.py",
+    "cde/routes/beta.py",
+    "cde/beta/**",
+    "web/src/pages/SubmissionPage.tsx",
+    "web/src/pages/ReviewPage.tsx",
+    "web/src/pages/OperatorPage.tsx",
+    "web/src/beta/**",
+    "tests/beta/**"
+  ],
+  "files": [
+    "cde/omr_adapter.py",
+    "cde/grading_core.py",
+    "cde/grading.py",
+    "cde/review.py",
+    "cde/stages.py",
+    "cde/dispatcher.py",
+    "cde/workflows.py",
+    "cde/activities.py",
+    "cde/worker.py",
+    "cde/routes/beta.py"
+  ],
+  "commands": [
+    "python tools/run_tests.py --agent beta --tier unit -- tests/beta/unit"
+  ],
+  "migrations_required": [],
+  "contracts_changed": [],
+  "integration_exports": [
+    "cde.routes.beta:beta_router",
+    "cde.worker:CDEWorkerBundle"
+  ],
+  "external_gates": [],
+  "open_gaps": [
+    "Integration tests and MongoDB adapter implementations not yet provided by Alpha",
+    "Gamma needs to provide implementations for post-grade review handlers and activities"
+  ],
+  "next_step": "Wait for Alpha to provide actual database adapters and contract models"
+}

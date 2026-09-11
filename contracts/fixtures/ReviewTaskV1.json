@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "task_id": "50000000-0000-4000-8000-000000000001",
+  "submission_id": "10000000-0000-4000-8000-000000000001",
+  "exam_id": "20000000-0000-4000-8000-000000000001",
+  "kind": "bubble",
+  "question_number": 2,
+  "state": "claimed",
+  "version": 3,
+  "claimed_by": "60000000-0000-4000-8000-000000000001",
+  "lease_expires_at": "2026-01-01T10:05:00Z",
+  "evidence_ref": "synthetic/review/q2.png"
+}

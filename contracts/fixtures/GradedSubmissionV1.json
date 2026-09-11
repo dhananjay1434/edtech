@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "submission_id": "10000000-0000-4000-8000-000000000001",
+  "exam_id": "20000000-0000-4000-8000-000000000001",
+  "student_id": "30000000-0000-4000-8000-000000000001",
+  "template_id": "40000000-0000-4000-8000-000000000001",
+  "exam_revision": 1,
+  "processing_revision": 1,
+  "version": 9,
+  "answers_locked_at": "2026-01-01T10:10:00Z",
+  "graded_at": "2026-01-01T10:10:00Z",
+  "score": "0.750",
+  "maximum_score": "2.000",
+  "percentage": "37.500",
+  "answers": [
+    {
+      "question_number": 1,
+      "question_id": "70000000-0000-4000-8000-000000000001",
+      "question_revision": 1,
+      "selected_option": "A",
+      "finalized": true,
+      "state": "correct",
+      "awarded_marks": "1.000"
+    },
+    {
+      "question_number": 2,
+      "question_id": "70000000-0000-4000-8000-000000000002",
+      "question_revision": 1,
+      "selected_option": "C",
+      "finalized": true,
+      "state": "incorrect",
+      "awarded_marks": "-0.250"
+    }
+  ]
+}

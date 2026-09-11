@@ -1,0 +1,38 @@
+{
+  "cde/diagnostics_reference.py": {
+    "language": "python",
+    "section": "8.5",
+    "sha256": "b0d84350a35c6017064ee1961ff6804173ef070bb2c35ca842309f0e2c3d71a2",
+    "source_sha256": "1036075a2a3d2f3a7b06b005784df83128aaff4f70f6d28a97de497c0fc722d6"
+  },
+  "cde/email_reference.py": {
+    "language": "python",
+    "section": "11.3",
+    "sha256": "cb30917e1ca9e9f528de0628296bcfc8dba72208b604293041f0e117dcf77dc6",
+    "source_sha256": "1036075a2a3d2f3a7b06b005784df83128aaff4f70f6d28a97de497c0fc722d6"
+  },
+  "cde/embeddings_reference.py": {
+    "language": "python",
+    "section": "10.3",
+    "sha256": "9cedfa6c0f516b1e4fa224d6919104b969f35b648f9893df811bf76987fc03f1",
+    "source_sha256": "1036075a2a3d2f3a7b06b005784df83128aaff4f70f6d28a97de497c0fc722d6"
+  },
+  "cde/report_reference.py": {
+    "language": "python",
+    "section": "10.7",
+    "sha256": "90f67fe2b3dd0e5d885517bce3bf66a8bf8a284c8ca4b80bc741f7588967a218",
+    "source_sha256": "1036075a2a3d2f3a7b06b005784df83128aaff4f70f6d28a97de497c0fc722d6"
+  },
+  "prompts/diagnose-v1.txt": {
+    "language": "text",
+    "section": "8.2",
+    "sha256": "4135d921ecd9cdafb1a1fafb209764870d91ba5de8823f97a05025709f7fc642",
+    "source_sha256": "1036075a2a3d2f3a7b06b005784df83128aaff4f70f6d28a97de497c0fc722d6"
+  },
+  "schemas/diagnostic-v1.json": {
+    "language": "json",
+    "section": "8.4",
+    "sha256": "6a16047535e3735d3180d7776ed21eddd180f526fb34d0ebee50d1beead283d0",
+    "source_sha256": "1036075a2a3d2f3a7b06b005784df83128aaff4f70f6d28a97de497c0fc722d6"
+  }
+}

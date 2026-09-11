@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "submission_id": "10000000-0000-4000-8000-000000000001",
+  "exam_id": "20000000-0000-4000-8000-000000000001",
+  "student_id": "30000000-0000-4000-8000-000000000001",
+  "template_id": "40000000-0000-4000-8000-000000000001",
+  "processing_revision": 1,
+  "pipeline_target": 1,
+  "version": 7,
+  "state": "awaiting_review",
+  "identity_confirmed": true,
+  "alignment_confirmed": true,
+  "answers_locked_at": null,
+  "question_count": 2,
+  "marking_policy": {
+    "correct_marks": "1.000",
+    "wrong_marks": "-0.250",
+    "blank_marks": "0.000"
+  },
+  "answer_key": [
+    {"question_number": 1, "correct_option": "A"},
+    {"question_number": 2, "correct_option": "B"}
+  ],
+  "answers": [
+    {
+      "question_number": 1,
+      "selected_option": "A",
+      "finalized": true,
+      "source": "machine"
+    },
+    {
+      "question_number": 2,
+      "selected_option": null,
+      "finalized": false,
+      "source": "machine"
+    }
+  ]
+}

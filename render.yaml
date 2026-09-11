@@ -1,0 +1,31 @@
+﻿services:
+  - type: web
+    name: cde-backend
+    env: python
+    buildCommand: pip install -r requirements.lock
+    startCommand: bash start.sh
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DB_NAME
+        value: cde_db
+      - key: KEYCLOAK_SERVER_URL
+        value: https://cde-auth.onrender.com
+      - key: KEYCLOAK_REALM
+        value: cde
+      - key: KEYCLOAK_CLIENT_ID
+        value: cde-api
+      - key: KEYCLOAK_WEB_CLIENT_ID
+        value: cde-web
+      - key: GEMINI_API_KEY
+        sync: false
+
+  - type: web
+    name: cde-auth
+    env: docker
+    dockerfilePath: Dockerfile.keycloak
+    envVars:
+      - key: KEYCLOAK_ADMIN
+        value: admin
+      - key: KEYCLOAK_ADMIN_PASSWORD
+        value: admin

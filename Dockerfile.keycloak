@@ -1,0 +1,4 @@
+﻿FROM quay.io/keycloak/keycloak:26.0
+COPY infra/keycloak /opt/keycloak/data/import
+ENV JAVA_OPTS_APPEND="-Xmx256m"
+CMD ["start-dev", "--import-realm"]

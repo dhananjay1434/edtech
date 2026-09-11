@@ -1,0 +1,16 @@
+{
+  "status": "classified",
+  "error_type": "Calculation Slip",
+  "confidence": 0.72,
+  "plain_language_summary": "The visible working uses the intended method but contains an arithmetic error.",
+  "next_step": "Recheck the arithmetic in the highlighted step.",
+  "abstention_reason": null,
+  "evidence": [
+    {
+      "crop_id": "work-q2-1",
+      "bbox": [0.1, 0.2, 0.8, 0.5],
+      "transcription": "Synthetic arithmetic step",
+      "supports": "Synthetic localized arithmetic error"
+    }
+  ]
+}

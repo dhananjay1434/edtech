@@ -1,0 +1,14 @@
+{
+  "paths": {
+    "alpha": [
+      "cde/api.py", "cde/config.py", "cde/db.py", "cde/auth.py", "cde/migrate.py",
+      "contracts/**", "infra/**"
+    ],
+    "beta": [
+      "cde/omr.py", "workflows/**"
+    ],
+    "gamma": [
+      "cde/diagnostics.py", "cde/reports.py"
+    ]
+  }
+}

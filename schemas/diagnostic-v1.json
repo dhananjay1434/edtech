@@ -1,0 +1,38 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"type": "string", "enum": ["1.0"]},
+    "status": {"type": "string", "enum": ["classified", "abstained"]},
+    "error_class": {
+      "anyOf": [
+        {"type": "string", "enum": ["Calculation Slip", "Procedural Flaw", "Reading Comprehension Error", "Conceptual Deficit"]},
+        {"type": "null"}
+      ]
+    },
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "summary": {"type": "string"},
+    "next_step": {"type": "string"},
+    "abstention_reason": {"type": ["string", "null"]},
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "crop_id": {"type": "string"},
+          "bbox": {
+            "type": "array",
+            "items": {"type": "number", "minimum": 0, "maximum": 1},
+            "minItems": 4,
+            "maxItems": 4
+          },
+          "observation": {"type": "string"},
+          "transcription": {"type": ["string", "null"]}
+        },
+        "required": ["crop_id", "bbox", "observation", "transcription"]
+      }
+    }
+  },
+  "required": ["schema_version", "status", "error_class", "confidence", "summary", "next_step", "abstention_reason", "evidence"]
+}

@@ -1,0 +1,204 @@
+﻿
+> Write cde/retrieval.py with this complete policy kernel:
+  
+  ```python
+  from __future__ import annotations
+  
+  import math
+  from typing import Iterable
+  
+  MODEL = "text-embedding-3-small"
+  DIMENSIONS = 1536
+  CLASSES = {
+      "Calculation Slip", "Procedural Flaw",
+      "Reading Comprehension Error", "Conceptual Deficit",
+  }
+  
+  class InsufficientBank(RuntimeError):
+      pass
+  
+  def cosine_distance(a: list[float], b: list[float]) -> float:
+      if len(a) != DIMENSIONS or len(b) != DIMENSIONS:
+          raise ValueError("Embedding dimension mismatch")
+      if any(type(x) not in (int, float) or not math.isfinite(x) for x in a + b):
+          raise ValueError("Embedding contains a non-finite or invalid value")
+      an = math.sqrt(sum(x * x for x in a))
+      bn = math.sqrt(sum(x * x for x in b))
+      if an == 0 or bn == 0:
+          raise ValueError("Zero-norm embedding")
+      similarity = sum(x * y for x, y in zip(a, b)) / (an * bn)
+      return 1.0 - max(-1.0, min(1.0, similarity))
+  
+  def eligible(candidate: dict, original: dict, error_class: str,
+               excluded_families: set[str]) -> bool:
+      if error_class not in CLASSES:
+          raise ValueError("Unsupported error class")
+      if not candidate["approved"] or not candidate["active"]:
+          return False
+      if candidate["family_id"] in excluded_families:
+          return False
+      if candidate.get("embedding_model") != MODEL or candidate.get("embedding") is None:
+          return False
+      for field in ("subject", "topic_code", "language"):
+          if candidate[field] != original[field]:
+              return False
+      difficulty = original["difficulty"]
+      if error_class == "Calculation Slip":
+          return (candidate["target_skill"] == "accuracy"
+                  and candidate["difficulty"] == difficulty)
+      if error_class == "Procedural Flaw":
+          procedure = original.get("procedure_code")
+          return (procedure is not None
+                  and candidate["target_skill"] == "procedure"
+                  and candidate.get("procedure_code") == procedure
+                  and candidate["difficulty"] <= difficulty)
+      if error_class == "Reading Comprehension Error":
+          return (candidate["target_skill"] == "reading"
+                  and candidate["phrasing_variant"] != original["phrasing_variant"]
+                  and candidate["difficulty"] <= difficulty)
+      return (candidate["target_skill"] == "foundation"
+              and candidate["concept_code"] == original["concept_code"]
+              and candidate["difficulty"] <= max(1, difficulty - 1))
+  
+  def select_questions(
+      original: dict,
+      error_class: str,
+      query_vector: list[float],
+      candidates: Iterable[dict],
+      excluded_families: set[str],
+      limit: int = 2,
+  ) -> list[tuple[dict, float]]:
+      if type(limit) is not int or not 1 <= limit <= 2:
+          raise ValueError("Per-gap selection limit must be one or two")
+      # Validate query even when the eligible bank is empty.
+      cosine_distance(query_vector, query_vector)
+      if error_class == "Procedural Flaw" and not original.get("procedure_code"):
+          raise InsufficientBank("MISSING_PROCEDURE_CODE")
+      excluded = set(excluded_families)
+      excluded.add(original["family_id"])
+      best_per_family = {}
+      for candidate in candidates:
+          if not eligible(candidate, original, error_class, excluded):
+              continue
+          distance = cosine_distance(query_vector, candidate["embedding"])
+          ordering = (distance, candidate["family_id"], candidate["_id"])
+          previous = best_per_family.get(candidate["family_id"])
+          if previous is None or ordering < previous[0]:
+              best_per_family[candidate["family_id"]] = (ordering, candidate)
+      ranked = sorted(best_per_family.values(), key=lambda entry: entry[0])
+      return [(candidate, ordering[0]) for ordering, candidate in ranked[:limit]]
+  ```
+  
+  This is newly supplied adaptation code based on the source's hard-filter intent,
+  not verbatim retrieval SQL. The declared tie-break order is deterministic.
+  
+  MongoDB query adapter requirements:
+  - apply approved/active/model/subject/topic/language and class-specific predicates
+    before iterating candidates;
+  - exclude the original exam's families and families already assigned in this package;
+  - recheck eligibility in the kernel;
+  - do not arbitrarily truncate the candidate cursor before exact ranking;
+  - use a consistent question-bank view or immutable versioned input manifest;
+  - no unapproved question generation or filter relaxation.
+  
+  Group distinct gaps by (error_class, concept_code, procedure_code).
+  This grouping key is an explicit adaptation decision.
+  Order gaps deterministically by the earliest affected question number, then the key.
+  Select at most two per gap and ten total. Explain cap-related omissions separately
+  from insufficient-bank omissions. Do not count an intentional cap as full coverage.
+  
+  A result with fewer than the requested eligible questions records the actual
+  coverage and insufficient_bank. Do not fabricate replacements.
+  
+  Write tests/unit/test_retrieval.py for:
+  - all four classes;
+  - missing procedure code;
+  - level-1 conceptual deficit;
+  - wrong subject/topic/language;
+  - wrong embedding model/dimension/zero vector;
+  - same original family and duplicate families;
+  - sparse bank;
+  - deterministic ties;
+  - global family deduplication and ten-question cap.
+  
+  Run:
+  
+  ```bash
+  python -m pytest -q tests/unit/test_retrieval.py
+  ```
+  
+  Expected: all hard filters remain intact; insufficient coverage is explicit.
+  
+  ### Step 4 â€” Snapshot analytics
+  
+  Implement cde/analytics.py with these explicit denominator contracts:
+  
+  - enrolled_count: all roster memberships for the exam revision.
+  - excluded_count: roster memberships with a non-null excluded_reason.
+  - eligible_count: enrolled_count - excluded_count, stored inside metrics.
+  - graded_count: eligible students whose referenced current_submission_id points
+    to a matching, locked, graded submission revision.
+  - unresolved_count: eligible_count - graded_count.
+  - diagnostic_count: eligible graded students whose incorrect answers all have a
+    current accepted classified/overridden/abstained outcome; zero incorrect answers
+    is complete without provider calls.
+  - pending provider failures are not accepted diagnostic outcomes.
+  
+  Per-question answer percentages:
+  - denominator is graded_count for that exact current population;
+  - blank is reported separately from incorrect options;
+  - unresolved and excluded students do not appear as guessed blanks;
+  - empty denominator produces null percentage, not division by zero or 0% certainty.
+  
+  Diagnostic distribution:
+  - class shares use accepted classified/overridden wrong answers as denominator;
+  - abstained and unavailable counts are displayed separately;
+  - label whether a count is students, answers, or observations;
+  - repeated concept cohorts count distinct current students, not duplicate revisions.
+  
+  These are frozen MongoDB-adaptation metric definitions. Do not claim an SQL query
+  was copied unchanged.
+  
+  Read roster pointers, grades, diagnostic-current pointers and exclusions from one
+  consistent transactional snapshot. Build the fingerprint from the ordered input
+  revision IDs and policy/version identifiers. Persist the snapshot under unique
+  exam/fingerprint identity. Concurrent recomputes either reuse the same logical
+  snapshot or allocate a new snapshot revision transactionally.
+  
+  Do not overwrite a prior snapshot during a race. Keep creation time and provisional
+  coverage visible. Updating current_submission_id must never mutate old reports.
+  
+  Create tests/integration/test_phase3_analytics.py for:
+  - excluded/unresolved students;
+  - a superseded processing revision;
+  - corrected key represented by a different exam revision;
+  - zero students and zero wrong answers;
+  - abstained versus failed diagnostics;
+  - duplicate answers/current pointers rejected by prior invariants;
+  - concurrent recomputation and pointer changes;
+  - unassigned user aggregate access.
+  
+  Run:
+  
+  ```bash
+  python -m pytest -q tests/integration/test_phase3_analytics.py
+  ```
+  
+  Expected: correct denominators, explicit partial coverage and stable revision fingerprints.
+  
+  ### Step 5 â€” Immutable report manifest and safe renderer adapter
+  
+  Implement cde/report.py around the imported ReportLab reference API.
+  Inspect its real function signature and required fonts; do not invent a call.
+  
+  The report manifest must snapshot:
+  - submission/exam/key/report revisions;
+  - grade and answer summary;
+  - accepted diagnostic IDs and evidence references;
+  - selected practice question IDs, family/revision IDs and full approved content;
+  - retrieval policy version, selection reasons and distances;
+  - insufficient coverage and intentional cap omissions;
+  - template/prompt/schema/model versions needed for provenance;
+  - font identifiers/checksums and renderer code version.
+
+
