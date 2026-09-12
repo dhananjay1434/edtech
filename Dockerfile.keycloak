@@ -1,10 +1,22 @@
-﻿FROM quay.io/keycloak/keycloak:26.0
-COPY infra/keycloak /opt/keycloak/data/import
+FROM quay.io/keycloak/keycloak:26.0
+
+# Build-time options (baked in by `kc.sh build`). Single instance, so no
+# cluster networking: the default ispn/udp stack is what causes the JGroups
+# "cookie mismatch" spam when two containers overlap during a deploy.
 ENV KC_HEALTH_ENABLED=false
 ENV KC_METRICS_ENABLED=false
+ENV KC_CACHE=local
 ENV KC_HTTP_ENABLED=true
-ENV KC_HOSTNAME=cde-auth.onrender.com
+ENV KC_HOSTNAME=https://cde-auth.onrender.com
 ENV KC_PROXY_HEADERS=xforwarded
 RUN /opt/keycloak/bin/kc.sh build
+
+# Run the 148 schema changesets and the realm import at IMAGE BUILD time, so
+# the H2 database ships pre-populated in the image layer. On Render's free
+# tier those two steps alone cost ~2 min of every cold boot and pushed the
+# service past the port-scan timeout.
+COPY infra/keycloak /opt/keycloak/data/import
+RUN /opt/keycloak/bin/kc.sh import --optimized --dir /opt/keycloak/data/import
+
 ENV JAVA_OPTS_APPEND="-Xms64m -Xmx256m -XX:MetaspaceSize=64m -XX:MaxMetaspaceSize=160m -XX:TieredStopAtLevel=1 -Djava.security.egd=file:/dev/./urandom"
-CMD ["start", "--optimized", "--import-realm"]
+CMD ["start", "--optimized"]
