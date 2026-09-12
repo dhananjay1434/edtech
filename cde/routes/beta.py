@@ -224,9 +224,17 @@ async def resolve_task(
     exam_id = task["exam_id"]
     q_num = task["question_number"]
 
-    exam = db_adapter.db.exams.find_one({"_id": exam_id})
-    correct_option = _exam_answer_key(exam).get(q_num)
-    final_state = "correct" if req.decisionCode == correct_option else "incorrect"
+    # BLANK and MULTIPLE are outcomes, not options: they carry no
+    # selected_option, and grading_core scores them 0 / -1 respectively.
+    if req.decisionCode == "BLANK":
+        selected_option, final_state = None, "blank"
+    elif req.decisionCode == "MULTIPLE":
+        selected_option, final_state = None, "invalid_multiple"
+    else:
+        exam = db_adapter.db.exams.find_one({"_id": exam_id})
+        correct_option = _exam_answer_key(exam).get(q_num)
+        selected_option = req.decisionCode
+        final_state = "correct" if req.decisionCode == correct_option else "incorrect"
 
     db_adapter.db.review_tasks.update_one(
         {"_id": task_id},
@@ -241,7 +249,7 @@ async def resolve_task(
     db_adapter.db.submissions.update_one(
         {"_id": submission_id, "answers.question_number": q_num},
         {"$set": {
-            "answers.$.selected_option": req.decisionCode,
+            "answers.$.selected_option": selected_option,
             "answers.$.state": final_state,
             "answers.$.finalized": True,
             "answers.$.resolved_by": "human_review",
@@ -279,7 +287,7 @@ async def resolve_task(
             updated_sheet = db_adapter.db.sheets.find_one_and_update(
                 {"_id": submission_id, "answers.question_number": q_num},
                 {"$set": {
-                    "answers.$.selected_option": req.decisionCode,
+                    "answers.$.selected_option": selected_option,
                     "answers.$.state": final_state,
                     "answers.$.finalized": True,
                     "answers.$.resolved_by": "human_review",

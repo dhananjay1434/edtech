@@ -147,7 +147,10 @@ def _build_review_tasks(sheet, image_bytes, scoped_questions, integer_questions=
             "submission_id": sheet["_id"], "exam_id": sheet["exam_id"],
             "question_number": q.question_number, "kind": "ambiguous",
             "crop_id": crop_id,
-            "choices": [{"code": c, "label": f"Option {c}"} for c in "ABCD"],
+            "choices": [{"code": c, "label": f"Option {c}"} for c in "ABCD"] + [
+                {"code": "BLANK", "label": "No bubble filled — blank, scores 0"},
+                {"code": "MULTIPLE", "label": "More than one bubble filled — scores −1"},
+            ],
             "suggested_code": q.selected_option, "reason": q.reason,
             "revision": 1, "resolved": False, "claimed_by": None,
             "lease_expires_at": None, "created_at": datetime.utcnow()})
