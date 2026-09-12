@@ -2,5 +2,9 @@
 COPY infra/keycloak /opt/keycloak/data/import
 ENV KC_HEALTH_ENABLED=false
 ENV KC_METRICS_ENABLED=false
+ENV KC_HTTP_ENABLED=true
+ENV KC_HOSTNAME=cde-auth.onrender.com
+ENV KC_PROXY_HEADERS=xforwarded
+RUN /opt/keycloak/bin/kc.sh build
 ENV JAVA_OPTS_APPEND="-Xms64m -Xmx256m -XX:MetaspaceSize=64m -XX:MaxMetaspaceSize=160m -XX:TieredStopAtLevel=1 -Djava.security.egd=file:/dev/./urandom"
-CMD ["start-dev", "--import-realm"]
+CMD ["start", "--optimized", "--import-realm"]
