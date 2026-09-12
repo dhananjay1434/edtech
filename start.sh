@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 # Start the background worker process
 python -m cde.jobs.worker &
 # Start the FastAPI web server
