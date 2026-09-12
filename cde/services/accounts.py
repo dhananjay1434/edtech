@@ -21,5 +21,5 @@ def link_account(db_adapter, issuer: str, subject: str, student_id: str) -> dict
 def resolve_student_id(db_adapter, issuer: str, subject: str) -> str:
     link = db_adapter.db.account_links.find_one({"issuer": issuer, "subject": subject})
     if not link:
-        return "student-xyz"  # Auto-bind test users to the seeded dummy student
+        raise PermissionError("This login is not linked to a roster student.")
     return link["student_id"]

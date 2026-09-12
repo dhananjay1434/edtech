@@ -1,12 +1,11 @@
 """
 beta.py — Beta-tier FastAPI routes.
 
-Rough-sheet diagnostics layer (Gemini cognitive-diagnostic pipeline) plus the
-real OMR bubble-sheet ingestion pipeline:
+Rough-sheet diagnostics layer (Gemini cognitive-diagnostic pipeline) plus
+support routes for the real OMR bubble-sheet ingestion pipeline (the pipeline
+itself runs via the durable job worker in cde.jobs.handlers, not an HTTP
+upload route):
 
-  - Deterministic OMR grading (`POST /api/omr/upload`), backed by
-    `cde.omr_engine.process_omr_sheet` (ported from the BIOME OMR research
-    script) and MongoDB GridFS for image storage.
   - HITL review-task queue for ambiguous bubbles, backed by the
     `review_tasks` MongoDB collection (no mock state).
   - Rough-sheet ingestion + Gemini diagnostics (unchanged).
@@ -27,18 +26,35 @@ from typing import Any, Dict, List, Optional
 
 from bson.errors import InvalidId
 from bson.objectid import ObjectId
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Header, HTTPException, UploadFile
 from fastapi.responses import Response
 from PIL import Image
 from pydantic import BaseModel
 
 from cde.db import get_db, get_db_adapter, DatabaseAdapter
-from cde.auth import get_current_user
+from cde.auth import AuthorizationPort, get_auth_port
+from cde.services.accounts import resolve_student_id
 from cde.storage import upload as _upload_to_storage, upload_named as _upload_named, presign as _get_download_url
-from cde.omr_engine import process_omr_sheet, QuestionResult
+from cde.omr_engine import QuestionResult
 
 logger = logging.getLogger(__name__)
 beta_router = APIRouter()
+
+
+def _verified_claims(authorization: str = Header(...),
+                      auth_port: AuthorizationPort = Depends(get_auth_port)) -> dict:
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(401, "Missing bearer token")
+    try:
+        return auth_port.validate_token(authorization[7:])
+    except Exception:
+        raise HTTPException(401, "Invalid token")
+
+
+def _require_admin_claims(claims: dict = Depends(_verified_claims)) -> dict:
+    if "admin" not in claims.get("realm_access", {}).get("roles", []):
+        raise HTTPException(403, "Admin role required")
+    return claims
 
 
 # ---------------------------------------------------------------------------
@@ -278,8 +294,13 @@ async def resolve_task(
 
 
 @beta_router.get("/api/evidence/{crop_id}")
-async def get_evidence(crop_id: str, db_adapter: DatabaseAdapter = Depends(get_db_adapter)):
-    """Serve a cropped bubble/rough-sheet evidence image straight from GridFS."""
+async def get_evidence(crop_id: str, db_adapter: DatabaseAdapter = Depends(get_db_adapter),
+                        claims: dict = Depends(_require_admin_claims)):
+    """Serve a cropped bubble/rough-sheet evidence image straight from GridFS.
+
+    Admin-only: these crops back the HITL ambiguous-bubble review queue,
+    which only admin/operator staff use — students never see them.
+    """
     import gridfs
 
     fs = gridfs.GridFS(db_adapter.db)
@@ -578,11 +599,32 @@ async def get_exam_submissions(
 # ---------------------------------------------------------------------------
 
 @beta_router.get("/api/images/{file_id}")
-async def get_image_from_gridfs(file_id: str, db_adapter: DatabaseAdapter = Depends(get_db_adapter), user=Depends(get_current_user)):
+async def get_image_from_gridfs(file_id: str, db_adapter: DatabaseAdapter = Depends(get_db_adapter),
+                                 claims: dict = Depends(_verified_claims)):
     """
     Serve an image directly from MongoDB GridFS.
     Used by the frontend to render the rough sheets without needing AWS/Cloudflare.
+
+    Access is restricted: admins may view any image; students may only view
+    an image that belongs to one of their own sheets (checked by looking up
+    the sheet doc that references this GridFS id, never by trusting the URL).
     """
+    roles = claims.get("realm_access", {}).get("roles", [])
+    if "admin" not in roles:
+        if "student" not in roles:
+            raise HTTPException(status_code=403, detail="Forbidden")
+        try:
+            student_id = resolve_student_id(db_adapter, claims["iss"], claims["sub"])
+        except PermissionError:
+            raise HTTPException(status_code=403, detail="Account is not linked to a student")
+        gridfs_key = f"gridfs:{file_id}"
+        owns = db_adapter.db.sheets.find_one({
+            "student_id": student_id,
+            "$or": [{"image_key": gridfs_key}, {"rough_sheet_path": gridfs_key}],
+        })
+        if not owns:
+            raise HTTPException(status_code=403, detail="Forbidden")
+
     import gridfs
 
     fs = gridfs.GridFS(db_adapter.db)

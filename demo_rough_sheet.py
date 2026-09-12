@@ -5,9 +5,7 @@ import json
 from google import genai
 from pydantic import BaseModel, Field
 
-# Force stdout to utf-8 if needed, but safer to just use ascii logs
-API_KEY = "REDACTED-GEMINI-KEY"
-os.environ["GEMINI_API_KEY"] = API_KEY
+API_KEY = os.environ["GEMINI_API_KEY"]
 
 client = genai.Client(api_key=API_KEY)
 

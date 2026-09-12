@@ -28,7 +28,7 @@
     dockerfilePath: Dockerfile.keycloak
     envVars:
       - key: KEYCLOAK_ADMIN
-        value: admin
+        sync: false
       - key: KEYCLOAK_ADMIN_PASSWORD
-        value: admin
+        sync: false
 

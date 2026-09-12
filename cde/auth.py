@@ -1,4 +1,3 @@
-import os
 import jwt
 from jwt import PyJWKClient
 from fastapi import Request, HTTPException, Security, Depends
@@ -33,7 +32,8 @@ class AuthorizationPort:
                 token,
                 signing_key.key,
                 algorithms=["RS256"],
-                options={"verify_aud": False, "verify_iss": False}
+                audience=settings.keycloak_client_id,
+                issuer=f"{settings.keycloak_server_url}/realms/{settings.keycloak_realm}"
             )
             return payload
         except Exception as e:
@@ -71,6 +71,4 @@ def get_auth_port(db = Depends(get_db)):
     return AuthorizationPort(db)
 
 def get_current_user(token: str = Security(oauth2_scheme), auth_port: AuthorizationPort = Depends(get_auth_port)) -> UserContext:
-    if token == "mock_token" and os.environ.get("DEBUG", "") == "true":
-        return UserContext(user_id="dev-user", email="dev@local", roles=["operator", "teacher"], assignments=["test-exam"])
     return auth_port.get_user_context(token)
