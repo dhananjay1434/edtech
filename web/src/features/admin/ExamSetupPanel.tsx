@@ -13,6 +13,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert';
 import { Skeleton } from '../../components/ui/skeleton';
+import { Button } from '../../components/ui/button';
 
 const OPTIONS = ['A', 'B', 'C', 'D'] as const;
 
@@ -200,10 +201,10 @@ export function ExamSetupPanel() {
           </Alert>
         )}
 
-        <button className="action" data-testid="exam-submit-button"
+        <Button data-testid="exam-submit-button"
           disabled={!canSubmit || mutation.isPending} onClick={() => void submit()}>
           {mutation.isPending ? 'Creating…' : 'Create exam'}
-        </button>
+        </Button>
       </CardContent>
     </Card>
   );

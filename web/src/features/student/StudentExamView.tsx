@@ -5,29 +5,29 @@
 // headline, correct/wrong/blank/invalid breakdown with marks, and a
 // question-by-question table). Backed by GET /api/me/exams/{exam_id}/report.
 import { useQuery } from '@tanstack/react-query';
+import { CircleCheck, ClipboardCheck, ScanLine } from 'lucide-react';
 import { useRuntime } from '../../app/providers';
+import { useFeature } from './useFeatures';
+import { FeatureGate } from './FeatureGate';
 import { ApiError, AwardEntry } from '../../api/contracts';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Skeleton } from '../../components/ui/skeleton';
 import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert';
+import { Button } from '../../components/ui/button';
+import { StatCard } from '../../components/ui/stat-card';
+import { StatePill } from '../../components/ui/state-pill';
 import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from '../../components/ui/table';
 
 const STATE_LABEL: Record<AwardEntry['state'], string> = {
   correct: 'Correct',
-  incorrect: 'Wrong',
+  incorrect: 'Not correct yet',
   blank: 'Blank',
   invalid_multiple: 'Multiple bubbles',
   pending_review: 'Under review',
 };
-
-function marksBadgeVariant(marks: number): 'default' | 'destructive' | 'secondary' {
-  if (marks > 0) return 'default';
-  if (marks < 0) return 'destructive';
-  return 'secondary';
-}
 
 function formatMarks(marks: string): string {
   const n = Number(marks);
@@ -44,21 +44,24 @@ function Breakdown({ answers }: { answers: AwardEntry[] }) {
       marksByState[a.state] += Number(a.awarded_marks);
     }
   }
-  const rows: Array<{ key: string; label: string; count: number; marks: number }> = [
-    { key: 'correct', label: 'Correct', count: groups.correct, marks: marksByState.correct },
-    { key: 'incorrect', label: 'Wrong', count: groups.incorrect, marks: marksByState.incorrect },
-    { key: 'blank', label: 'Blank', count: groups.blank, marks: marksByState.blank },
-    { key: 'invalid_multiple', label: 'Multiple bubbles', count: groups.invalid_multiple, marks: marksByState.invalid_multiple },
+  const total = answers.length;
+  const rows: Array<{ key: string; label: string; count: number; marks: number; tone: 'success' | 'attention' | 'neutral' }> = [
+    { key: 'correct', label: STATE_LABEL.correct, count: groups.correct, marks: marksByState.correct, tone: 'success' },
+    { key: 'incorrect', label: STATE_LABEL.incorrect, count: groups.incorrect, marks: marksByState.incorrect, tone: 'attention' },
+    { key: 'blank', label: STATE_LABEL.blank, count: groups.blank, marks: marksByState.blank, tone: 'neutral' },
+    { key: 'invalid_multiple', label: STATE_LABEL.invalid_multiple, count: groups.invalid_multiple, marks: marksByState.invalid_multiple, tone: 'attention' },
   ];
   return (
     <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4" data-testid="result-breakdown">
       {rows.map(r => (
-        <div key={r.key} className="rounded-lg border border-border p-3" data-testid={`breakdown-${r.key}`}>
-          <dt className="text-xs font-medium text-muted-foreground">{r.label}</dt>
-          <dd className="mt-1 text-xl font-semibold">{r.count}</dd>
-          <dd className={`mt-1 text-sm font-medium ${r.marks < 0 ? 'text-destructive' : r.marks > 0 ? 'text-success' : 'text-muted-foreground'}`}>
-            {formatMarks(String(r.marks))} marks
-          </dd>
+        <div key={r.key} data-testid={`breakdown-${r.key}`}>
+          <StatCard
+            label={r.label}
+            value={String(r.count)}
+            context={`of ${total} question${total === 1 ? '' : 's'} — ${formatMarks(String(r.marks))} marks`}
+            tone={r.count > 0 ? r.tone : 'neutral'}
+            action={{ label: 'See which ones', onClick: () => document.getElementById('question-table')?.scrollIntoView({ behavior: 'smooth' }) }}
+          />
         </div>
       ))}
     </dl>
@@ -67,9 +70,9 @@ function Breakdown({ answers }: { answers: AwardEntry[] }) {
 
 function QuestionTable({ answers }: { answers: AwardEntry[] }) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-border">
+    <div id="question-table" className="overflow-x-auto rounded-lg border border-border">
       <Table data-testid="question-table">
-        <TableHeader>
+        <TableHeader className="sticky top-0 bg-card">
           <TableRow>
             <TableHead>Q#</TableHead>
             <TableHead>Your answer</TableHead>
@@ -82,12 +85,8 @@ function QuestionTable({ answers }: { answers: AwardEntry[] }) {
             <TableRow key={a.question_number} data-testid={`question-row-${a.question_number}`}>
               <TableCell className="font-medium">{a.question_number}</TableCell>
               <TableCell>{a.selected_option ?? <span className="text-muted-foreground">Blank</span>}</TableCell>
-              <TableCell>
-                <Badge variant={marksBadgeVariant(Number(a.awarded_marks))}>
-                  {STATE_LABEL[a.state] ?? a.state}
-                </Badge>
-              </TableCell>
-              <TableCell className={`text-right font-medium ${Number(a.awarded_marks) < 0 ? 'text-destructive' : Number(a.awarded_marks) > 0 ? 'text-success' : 'text-muted-foreground'}`}>
+              <TableCell><StatePill state={a.state} /></TableCell>
+              <TableCell className={`text-right font-mono font-medium tabular-nums ${Number(a.awarded_marks) < 0 ? 'text-attention' : Number(a.awarded_marks) > 0 ? 'text-success' : 'text-muted-foreground'}`}>
                 {formatMarks(a.awarded_marks)}
               </TableCell>
             </TableRow>
@@ -97,6 +96,12 @@ function QuestionTable({ answers }: { answers: AwardEntry[] }) {
     </div>
   );
 }
+
+const STAGES = [
+  { key: 'scan', label: 'Sheet scanned', Icon: ScanLine },
+  { key: 'check', label: 'Answers checked', Icon: ClipboardCheck },
+  { key: 'publish', label: 'Result published', Icon: CircleCheck },
+] as const;
 
 function ProcessingCard() {
   return (
@@ -108,24 +113,27 @@ function ProcessingCard() {
         </div>
         <CardDescription>We&apos;ll show your result here as soon as it&apos;s ready.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
+        <ol className="space-y-3">
+          {STAGES.map((stage, i) => (
+            <li key={stage.key} className="flex items-center gap-3 text-sm">
+              <stage.Icon className={`h-5 w-5 shrink-0 ${i === 0 ? 'text-primary' : 'text-muted-foreground'}`} aria-hidden="true" />
+              <span className={i === 0 ? 'font-medium text-foreground' : 'text-muted-foreground'}>{stage.label}</span>
+              {i === 0 && <Badge variant="secondary" className="ml-auto">Now</Badge>}
+            </li>
+          ))}
+        </ol>
         <p className="text-sm text-muted-foreground">
-          Your answer sheet has been scanned and is going through a careful review.
           Nothing is shown until every answer has been fully checked — including
           anything our system wasn&apos;t confident about, which a person always
           double-checks by hand. This can take a little time.
         </p>
-        <div className="space-y-2" aria-hidden="true">
-          <Skeleton className="h-4 w-3/4" />
-          <Skeleton className="h-4 w-1/2" />
-        </div>
-        <div className="rounded-lg border border-border bg-muted/40 p-4">
-          <h3 className="text-sm font-semibold">Coming soon</h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Soon you&apos;ll be able to upload a photo of your rough work here,
-            so we can look at your working once your result is ready.
+        <FeatureGate feature="cognitive.diagnosis"
+          sample={<p className="text-sm text-muted-foreground">Once your result is ready, you&apos;ll be able to attach a photo of your rough work here so it can be looked at.</p>}>
+          <p className="text-sm text-muted-foreground">
+            You&apos;ll be able to attach your rough work once your result is published.
           </p>
-        </div>
+        </FeatureGate>
       </CardContent>
     </Card>
   );
@@ -133,6 +141,7 @@ function ProcessingCard() {
 
 export function StudentExamView({ examId }: { examId: string }) {
   const { api, scope } = useRuntime();
+  const growth = useFeature('cognitive.growth');
   const query = useQuery({
     queryKey: [scope, 'my-exam-report', examId],
     queryFn: ({ signal }) => api.myExamReport(examId, signal),
@@ -140,7 +149,7 @@ export function StudentExamView({ examId }: { examId: string }) {
   });
 
   return (
-    <section className="mx-auto max-w-3xl space-y-6" data-testid="student-exam-view">
+    <section className="mx-auto max-w-3xl space-y-6 animate-in fade-in-0 duration-300" data-testid="student-exam-view">
       <header>
         <p className="text-sm font-medium text-primary" data-testid="student-exam-id">{examId}</p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight" data-testid="student-exam-title">My exam</h1>
@@ -168,9 +177,9 @@ export function StudentExamView({ examId }: { examId: string }) {
                 ? 'This account is not linked to a student record yet. Ask your institute admin for help.'
                 : 'Please check your connection and try again.'}
             </p>
-            <button className="action" data-testid="student-report-retry" onClick={() => void query.refetch()}>
+            <Button data-testid="student-report-retry" onClick={() => void query.refetch()}>
               Try again
-            </button>
+            </Button>
           </AlertDescription>
         </Alert>
       )}
@@ -192,7 +201,14 @@ export function StudentExamView({ examId }: { examId: string }) {
               <p className="text-4xl font-semibold tabular-nums" aria-label={`Score ${query.data.score} out of ${query.data.maximum}`}>
                 {Number(query.data.score)} <span className="text-xl text-muted-foreground">/ {Number(query.data.maximum)}</span>
               </p>
-              <p className="mt-1 text-sm text-muted-foreground">{Number(query.data.percentage)}%</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {Number(query.data.percentage)}% — marks after negative marking
+              </p>
+              {!growth.isPending && (
+                growth.enabled
+                  ? <a href="/student/growth" className="mt-2 inline-block text-sm font-medium text-primary hover:underline">Open growth</a>
+                  : <a href="/student/features" className="mt-2 inline-block text-sm font-medium text-primary hover:underline">See what your institute can enable</a>
+              )}
             </div>
             <Breakdown answers={query.data.answers} />
             <QuestionTable answers={query.data.answers} />

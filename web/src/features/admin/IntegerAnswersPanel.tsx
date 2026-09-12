@@ -12,6 +12,7 @@ import { Label } from '../../components/ui/label';
 import { Badge } from '../../components/ui/badge';
 import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert';
 import { Skeleton } from '../../components/ui/skeleton';
+import { Button } from '../../components/ui/button';
 import { AuthImage } from '../../components/AuthImage';
 
 export function IntegerAnswersPanel() {
@@ -100,10 +101,10 @@ export function IntegerAnswersPanel() {
                   </AlertDescription>
                 </Alert>
               )}
-              <button className="action" type="submit" data-testid="integer-submit-button"
+              <Button type="submit" data-testid="integer-submit-button"
                 disabled={value.trim() === '' || resolve.isPending}>
                 {resolve.isPending ? 'Saving…' : 'Save and continue'}
-              </button>
+              </Button>
             </form>
           </div>
         )}

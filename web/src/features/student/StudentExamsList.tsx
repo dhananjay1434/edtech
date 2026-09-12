@@ -36,7 +36,14 @@ export function StudentExamsList() {
           </Alert>
         )}
         {query.isSuccess && query.data.length === 0 && (
-          <p className="text-sm text-muted-foreground">No exams yet.</p>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              No exams yet — results appear here once your institute uploads a sheet with your roll number.
+            </p>
+            <Link to="/student/features" className="text-sm font-medium text-primary hover:underline">
+              See what this portal can do
+            </Link>
+          </div>
         )}
         {query.isSuccess && query.data.map(exam => (
           <Link key={exam.exam_id} to={`/student/exams/${exam.exam_id}`}

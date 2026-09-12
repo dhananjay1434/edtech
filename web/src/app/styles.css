@@ -15,7 +15,7 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.398 0.192 280.9);
+  --primary: oklch(0.42 0.14 280.9);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -26,8 +26,15 @@
   --destructive: oklch(0.577 0.245 27.325);
   --success: oklch(0.6 0.14 155);
   --success-foreground: oklch(0.985 0 0);
+  --success-soft: oklch(0.95 0.03 155);
   --warning: oklch(0.75 0.16 75);
   --warning-foreground: oklch(0.205 0 0);
+  /* Muted terra-cotta for "not correct yet" — a parasympathetic alternative
+     to saturated red, which the design rules reserve for genuine errors. */
+  --attention: oklch(0.62 0.1 35);
+  --attention-foreground: oklch(0.985 0 0);
+  --attention-soft: oklch(0.95 0.03 35);
+  --neutral-soft: oklch(0.96 0 0);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.398 0.192 280.9);
@@ -53,9 +60,6 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 :focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
 .skip-link { position: absolute; left: -10000px; }
 .skip-link:focus { left: 1rem; top: 1rem; z-index: 100; background: var(--background); color: var(--foreground); padding: 1rem; }
-.panel { background: var(--card); color: var(--card-foreground); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; }
-.action { background: var(--primary); color: var(--primary-foreground); border-radius: 8px; padding: .6rem 1rem; }
-
 /* Calm-precision student surface: sharper geometry than the admin console,
    so a student focused on one question or one result sees a workspace, not
    a dashboard. shadcn components read --radius directly. */
@@ -86,8 +90,13 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   --color-destructive: var(--destructive);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-attention: var(--attention);
+  --color-attention-foreground: var(--attention-foreground);
+  --color-attention-soft: var(--attention-soft);
+  --color-neutral-soft: var(--neutral-soft);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -118,7 +127,7 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.75 0.16 280.9);
+  --primary: oklch(0.78 0.12 280.9);
   --primary-foreground: oklch(0.145 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
@@ -129,8 +138,13 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   --destructive: oklch(0.704 0.191 22.216);
   --success: oklch(0.7 0.15 155);
   --success-foreground: oklch(0.145 0 0);
+  --success-soft: oklch(0.28 0.04 155);
   --warning: oklch(0.8 0.15 75);
   --warning-foreground: oklch(0.145 0 0);
+  --attention: oklch(0.74 0.09 35);
+  --attention-foreground: oklch(0.145 0 0);
+  --attention-soft: oklch(0.3 0.04 35);
+  --neutral-soft: oklch(0.25 0 0);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.75 0.16 280.9);

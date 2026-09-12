@@ -11,6 +11,7 @@ import { Label } from '../../components/ui/label';
 import { Badge } from '../../components/ui/badge';
 import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert';
 import { Skeleton } from '../../components/ui/skeleton';
+import { Button } from '../../components/ui/button';
 
 const STATE_LABEL: Record<string, string> = {
   pending_read: 'Reading bubbles',
@@ -100,11 +101,11 @@ export function BatchUploadPanel() {
             </Alert>
           )}
 
-          <button className="action" data-testid="batch-upload-button"
+          <Button data-testid="batch-upload-button"
             disabled={!examId || !file || upload.isPending}
             onClick={() => void upload.mutateAsync()}>
             {upload.isPending ? 'Uploading…' : 'Upload batch'}
-          </button>
+          </Button>
         </CardContent>
       </Card>
 

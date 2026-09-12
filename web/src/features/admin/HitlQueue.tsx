@@ -13,6 +13,7 @@ import { Card, CardHeader, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Skeleton } from '../../components/ui/skeleton';
 import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert';
+import { Button } from '../../components/ui/button';
 
 export function HitlQueue() {
   const { api, scope } = useRuntime();
@@ -71,7 +72,7 @@ export function HitlQueue() {
           <AlertTitle>The queue could not be refreshed</AlertTitle>
           <AlertDescription className="space-y-3">
             <p>Resolution is paused until it reconnects.</p>
-            <button className="action" onClick={() => void query.refetch()}>Reconnect</button>
+            <Button onClick={() => void query.refetch()}>Reconnect</Button>
           </AlertDescription>
         </Alert>
       )}
@@ -200,10 +201,10 @@ function ResolutionForm({ task, blocked, onRemoved }: {
           </label>
           <p className="text-xs text-muted-foreground">Do not enter names or other identifying information.</p>
           {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-          <button className="action" type="submit" data-testid="submit-resolution"
+          <Button type="submit" data-testid="submit-resolution"
             disabled={!ready || !valid || blocked || mutation.isPending}>
             {mutation.isPending ? 'Saving resolution…' : 'Save resolution and continue'}
-          </button>
+          </Button>
         </form>
       </CardContent>
     </Card>

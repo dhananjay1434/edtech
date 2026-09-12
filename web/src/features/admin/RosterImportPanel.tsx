@@ -13,6 +13,7 @@ import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert';
 import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from '../../components/ui/table';
+import { Button } from '../../components/ui/button';
 
 interface ParsedRow {
   line: number;
@@ -159,10 +160,10 @@ export function RosterImportPanel() {
           </Alert>
         )}
 
-        <button className="action" data-testid="roster-commit-button"
+        <Button data-testid="roster-commit-button"
           disabled={!canCommit || mutation.isPending} onClick={() => void commit()}>
           {mutation.isPending ? 'Importing…' : `Import ${validRows.length || ''} students`}
-        </button>
+        </Button>
       </CardContent>
     </Card>
   );
