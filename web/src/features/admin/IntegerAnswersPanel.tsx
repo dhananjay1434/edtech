@@ -12,6 +12,7 @@ import { Label } from '../../components/ui/label';
 import { Badge } from '../../components/ui/badge';
 import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert';
 import { Skeleton } from '../../components/ui/skeleton';
+import { AuthImage } from '../../components/AuthImage';
 
 export function IntegerAnswersPanel() {
   const exams = useQuery({ queryKey: ['admin', 'exams'], queryFn: () => listExams() });
@@ -78,7 +79,7 @@ export function IntegerAnswersPanel() {
                 )}
               </p>
               {current.image_id
-                ? <img src={`/api/images/${current.image_id}`} alt={`Scanned sheet, page ${current.page_number}`}
+                ? <AuthImage src={`/api/images/${current.image_id}`} alt={`Scanned sheet, page ${current.page_number}`}
                     className="max-h-[65vh] w-full rounded-lg border border-border object-contain" />
                 : <div className="rounded-lg border border-dashed border-border p-8 text-center text-muted-foreground">No image available</div>}
             </div>

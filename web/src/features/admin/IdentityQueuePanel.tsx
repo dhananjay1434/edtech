@@ -14,6 +14,7 @@ import { Label } from '../../components/ui/label';
 import { Badge } from '../../components/ui/badge';
 import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert';
 import { Skeleton } from '../../components/ui/skeleton';
+import { AuthImage } from '../../components/AuthImage';
 
 export function IdentityQueuePanel() {
   const exams = useQuery({ queryKey: ['admin', 'exams'], queryFn: () => listExams() });
@@ -95,7 +96,7 @@ export function IdentityQueuePanel() {
             <div>
               <p className="mb-2 text-sm font-medium">Sheet #{currentSheet.page_number}</p>
               {currentSheet.image_id
-                ? <img src={`/api/images/${currentSheet.image_id}`} alt={`Scanned sheet, page ${currentSheet.page_number}`}
+                ? <AuthImage src={`/api/images/${currentSheet.image_id}`} alt={`Scanned sheet, page ${currentSheet.page_number}`}
                     className="max-h-[60vh] w-full rounded-lg border border-border object-contain" />
                 : <div className="rounded-lg border border-dashed border-border p-8 text-center text-muted-foreground">No image available</div>}
             </div>
