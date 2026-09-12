@@ -1,17 +1,23 @@
 ﻿import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate, useParams } from 'react-router-dom';
 import { Providers } from './app/providers';
 import { Shell, RequirePortal } from './app/Shell';
 import { HitlQueue } from './features/admin/HitlQueue';
 import { AdminConsole } from './features/admin/AdminConsole';
 import { StudentExamView } from './features/student/StudentExamView';
+import { StudentExamsList } from './features/student/StudentExamsList';
 import { CdeApiClient } from './api/client';
 import { Runtime } from './api/contracts';
 import { initAuth, getToken, hasRole, logout } from './auth';
 import './app/styles.css';
 
 await initAuth();
+
+function StudentExamRoute() {
+    const { examId } = useParams();
+    return examId ? <StudentExamView examId={examId} /> : <Navigate to="/student/exams" replace />;
+}
 
 const apiClient = new CdeApiClient(async () => getToken() ?? '');
 // Note: 'teacher' is deliberately absent - there is no teacher role in this product.
@@ -49,8 +55,8 @@ const router = createBrowserRouter([
         element: <RequirePortal role="student" />,
         children: [
             { index: true, element: <Navigate to="exams" replace /> },
-            { path: 'exams', element: <Navigate to="/student/exams/test-exam-1" replace /> },
-            { path: 'exams/:examId', element: <StudentExamView examId="test-exam-1" /> }
+            { path: 'exams', element: <StudentExamsList /> },
+            { path: 'exams/:examId', element: <StudentExamRoute /> }
         ]
       }
     ]

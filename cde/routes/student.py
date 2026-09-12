@@ -35,6 +35,24 @@ def current_student_id(claims: dict = Depends(verified_claims),
         raise HTTPException(403, "Account is not linked to a student")
 
 
+@student_router.get("/api/me/exams")
+def my_exams(student_id: str = Depends(current_student_id),
+             db_adapter: DatabaseAdapter = Depends(get_db_adapter)):
+    """Every exam this student has a sheet in. Status only — no score data
+    leaks here while a report is still processing."""
+    exam_ids = sorted({s["exam_id"] for s in db_adapter.db.sheets.find(
+        {"student_id": student_id}, {"exam_id": 1})})
+    names = {e["_id"]: e.get("name", e["_id"]) for e in db_adapter.db.exams.find(
+        {"_id": {"$in": exam_ids}}, {"name": 1})}
+    out = []
+    for exam_id in exam_ids:
+        published = db_adapter.db.report_revisions.find_one(
+            {"exam_id": exam_id, "student_id": student_id, "state": "published"}, {"_id": 1})
+        out.append({"exam_id": exam_id, "name": names.get(exam_id, exam_id),
+                    "status": "ready" if published else "processing"})
+    return {"exams": out}
+
+
 @student_router.get("/api/me/exams/{exam_id}/report")
 def my_report(exam_id: str,
               student_id: str = Depends(current_student_id),
