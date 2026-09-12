@@ -2,6 +2,8 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { useRuntime } from './providers';
 import type { Portal } from '../api/contracts';
+import { ThemeToggle } from './ThemeToggle';
+import { Button } from '../components/ui/button';
 
 const entries: Array<{ role: Portal; to: string; label: string }> = [
   { role: 'teacher', to: '/teacher/exams', label: 'Teaching' },
@@ -30,14 +32,17 @@ export function Shell() {
           <nav aria-label="Portals" className="flex flex-wrap gap-4">
             {entries.filter(x => portals.includes(x.role)).map(x => (
               <NavLink key={x.to} to={x.to}
-                className={({ isActive }) => isActive
-                  ? 'font-semibold text-primary underline underline-offset-8'
-                  : 'text-muted-foreground'}>
+                className={({ isActive }) => `border-b-2 pb-1 ${isActive
+                  ? 'border-primary font-semibold text-foreground'
+                  : 'border-transparent text-muted-foreground'}`}>
                 {x.label}
               </NavLink>
             ))}
           </nav>
-          <button className="ml-auto" onClick={() => void signOut()}>Sign out</button>
+          <div className="ml-auto flex items-center gap-3">
+            <ThemeToggle />
+            <Button variant="ghost" onClick={() => void signOut()}>Sign out</Button>
+          </div>
         </div>
       </header>
       <main id="main" tabIndex={-1} className="mx-auto max-w-7xl p-4 md:p-8">
