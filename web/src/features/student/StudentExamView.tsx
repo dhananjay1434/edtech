@@ -9,6 +9,8 @@ import { CircleCheck, ClipboardCheck, ScanLine } from 'lucide-react';
 import { useRuntime } from '../../app/providers';
 import { useFeature } from './useFeatures';
 import { FeatureGate } from './FeatureGate';
+import { DiagnosisCard } from './DiagnosisCard';
+import { DiagnosisSample } from './samples/DiagnosisSample';
 import { ApiError, AwardEntry } from '../../api/contracts';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
@@ -103,7 +105,7 @@ const STAGES = [
   { key: 'publish', label: 'Result published', Icon: CircleCheck },
 ] as const;
 
-function ProcessingCard() {
+function ProcessingCard({ examId }: { examId: string }) {
   return (
     <Card data-testid="processing-screen">
       <CardHeader>
@@ -128,11 +130,8 @@ function ProcessingCard() {
           anything our system wasn&apos;t confident about, which a person always
           double-checks by hand. This can take a little time.
         </p>
-        <FeatureGate feature="cognitive.diagnosis"
-          sample={<p className="text-sm text-muted-foreground">Once your result is ready, you&apos;ll be able to attach a photo of your rough work here so it can be looked at.</p>}>
-          <p className="text-sm text-muted-foreground">
-            You&apos;ll be able to attach your rough work once your result is published.
-          </p>
+        <FeatureGate feature="cognitive.diagnosis" sample={<DiagnosisSample />}>
+          <DiagnosisCard examId={examId} />
         </FeatureGate>
       </CardContent>
     </Card>
@@ -185,7 +184,7 @@ export function StudentExamView({ examId }: { examId: string }) {
       )}
 
       {query.isSuccess && query.data.status === 'processing' && (
-        <ProcessingCard />
+        <ProcessingCard examId={examId} />
       )}
 
       {query.isSuccess && query.data.status === 'ready' && (
@@ -212,6 +211,9 @@ export function StudentExamView({ examId }: { examId: string }) {
             </div>
             <Breakdown answers={query.data.answers} />
             <QuestionTable answers={query.data.answers} />
+            <FeatureGate feature="cognitive.diagnosis" sample={<DiagnosisSample />}>
+              <DiagnosisCard examId={examId} />
+            </FeatureGate>
           </CardContent>
         </Card>
       )}

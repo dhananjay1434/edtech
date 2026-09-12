@@ -47,3 +47,42 @@ export interface MyExam { exam_id: string; name: string; status: 'ready' | 'proc
 export function listMyExams() {
   return call<{ exams: MyExam[] }>('/exams');
 }
+
+export function uploadRoughSheet(examId: string, file: File) {
+  const body = new FormData();
+  body.append('file', file);
+  return call<{ status: 'uploaded' }>(`/exams/${encodeURIComponent(examId)}/rough-sheet`, {
+    method: 'POST',
+    body,
+  });
+}
+
+export function declareNoRoughSheet(examId: string) {
+  return call<{ status: 'none_provided' }>(`/exams/${encodeURIComponent(examId)}/rough-sheet/none`, {
+    method: 'POST',
+  });
+}
+
+export type ErrorClass =
+  | 'Calculation Slip' | 'Procedural Flaw' | 'Reading Comprehension Error' | 'Conceptual Deficit';
+
+export interface DiagnosisQuestion {
+  question_number: number;
+  subject: string | null;
+  status: 'classified' | 'abstained';
+  error_class: ErrorClass | null;
+  confidence: number | null;
+  summary: string | null;
+  next_step: string | null;
+  abstention_reason: string | null;
+  reviewed: boolean;
+}
+
+export type DiagnosisView =
+  | { status: 'waiting_for_result' }
+  | { status: 'processing'; rough_sheet_status: string | null }
+  | { status: 'ready'; rough_sheet_status: string | null; grade_revision: number; questions: DiagnosisQuestion[] };
+
+export function getDiagnosis(examId: string) {
+  return call<DiagnosisView>(`/exams/${encodeURIComponent(examId)}/diagnosis`);
+}

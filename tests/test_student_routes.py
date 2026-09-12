@@ -24,9 +24,11 @@ def png_bytes():
 
 @pytest.fixture(autouse=True)
 def clean_db():
-    for c in ("sheets", "exams"):
+    for c in ("sheets", "exams", "diagnostics", "entitlements"):
         TEST_DB.db[c].delete_many({})
     ensure_indexes(TEST_DB.db)
+    TEST_DB.db.entitlements.insert_one(
+        {"_id": "institute", "enabled": {"cognitive.diagnosis": True}})
     TEST_DB.db.sheets.insert_one({
         "_id": "sh1", "exam_id": "e1", "batch_id": "b1", "page_number": 1,
         "state": "pending_identity", "student_id": "std1", "rejection_reasons": [],
@@ -77,3 +79,62 @@ def test_no_sheet_for_exam_returns_404():
     r = client.post("/api/me/exams/unknown-exam/rough-sheet",
                     files={"file": ("rough.png", png_bytes(), "image/png")})
     assert r.status_code == 404
+
+
+def test_upload_is_404_when_feature_disabled():
+    TEST_DB.db.entitlements.update_one(
+        {"_id": "institute"}, {"$set": {"enabled.cognitive.diagnosis": False}})
+    r = client.post("/api/me/exams/e1/rough-sheet",
+                    files={"file": ("rough.png", png_bytes(), "image/png")})
+    assert r.status_code == 404
+
+
+def test_declare_none_is_404_when_feature_disabled():
+    TEST_DB.db.entitlements.update_one(
+        {"_id": "institute"}, {"$set": {"enabled.cognitive.diagnosis": False}})
+    r = client.post("/api/me/exams/e1/rough-sheet/none")
+    assert r.status_code == 404
+
+
+def test_diagnosis_is_404_when_feature_disabled():
+    TEST_DB.db.entitlements.update_one(
+        {"_id": "institute"}, {"$set": {"enabled.cognitive.diagnosis": False}})
+    r = client.get("/api/me/exams/e1/diagnosis")
+    assert r.status_code == 404
+
+
+def test_upload_resets_diagnostics_ready():
+    TEST_DB.db.sheets.update_one({"_id": "sh1"}, {"$set": {"diagnostics_ready": True}})
+    r = client.post("/api/me/exams/e1/rough-sheet",
+                    files={"file": ("rough.png", png_bytes(), "image/png")})
+    assert r.status_code == 200
+    assert TEST_DB.db.sheets.find_one({"_id": "sh1"})["diagnostics_ready"] is False
+
+
+def test_diagnosis_waiting_for_result_before_published():
+    r = client.get("/api/me/exams/e1/diagnosis")
+    assert r.status_code == 200
+    assert r.json() == {"status": "waiting_for_result"}
+
+
+def test_diagnosis_ready_shape():
+    TEST_DB.db.sheets.update_one({"_id": "sh1"}, {"$set": {
+        "state": "published", "diagnostics_ready": True, "grade_revision": 1,
+        "rough_sheet_status": "uploaded"}})
+    TEST_DB.db.diagnostics.insert_one({
+        "_id": "diag:sh1:q1:r1", "sheet_id": "sh1", "exam_id": "e1", "student_id": "std1",
+        "question_number": 1, "grade_revision": 1, "subject": "Physics",
+        "diagnostic": {"status": "classified", "error_class": "Calculation Slip",
+                       "confidence": 0.95, "summary": "s", "next_step": "n",
+                       "abstention_reason": None, "evidence": [{"crop_id": "x"}]},
+    })
+    r = client.get("/api/me/exams/e1/diagnosis")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["status"] == "ready"
+    assert body["grade_revision"] == 1
+    assert len(body["questions"]) == 1
+    q = body["questions"][0]
+    assert q["question_number"] == 1
+    assert q["error_class"] == "Calculation Slip"
+    assert "evidence" not in q

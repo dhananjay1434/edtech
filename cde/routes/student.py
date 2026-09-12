@@ -5,7 +5,8 @@ from cde.db import DatabaseAdapter, get_db_adapter
 from cde.auth import AuthorizationPort, get_auth_port
 from cde.services.accounts import resolve_student_id
 from cde.features import catalog_view
-from cde.services.entitlements import read_enabled
+from cde.services.entitlements import read_enabled, require_feature
+from cde.services.diagnosis_view import build_diagnosis_view
 
 student_router = APIRouter()
 
@@ -76,7 +77,8 @@ def my_report(exam_id: str,
             "answers": report["awards"], "revision": report["revision"]}
 
 
-@student_router.post("/api/me/exams/{exam_id}/rough-sheet")
+@student_router.post("/api/me/exams/{exam_id}/rough-sheet",
+                     dependencies=[Depends(require_feature("cognitive.diagnosis"))])
 async def upload_my_rough_sheet(exam_id: str, file: UploadFile = File(...),
                                 student_id: str = Depends(current_student_id),
                                 db_adapter: DatabaseAdapter = Depends(get_db_adapter)):
@@ -101,7 +103,8 @@ async def upload_my_rough_sheet(exam_id: str, file: UploadFile = File(...),
             {"_id": sheet["_id"]},
             {"$set": {"rough_sheet_path": storage_key,
                       "rough_sheet_status": "uploaded",
-                      "rough_sheet_uploaded_at": datetime.utcnow()},
+                      "rough_sheet_uploaded_at": datetime.utcnow(),
+                      "diagnostics_ready": False},
              "$inc": {"rough_sheet_upload_count": 1}},
             session=s, return_document=ReturnDocument.AFTER)
         if updated.get("state") == "published":
@@ -110,7 +113,8 @@ async def upload_my_rough_sheet(exam_id: str, file: UploadFile = File(...),
     return {"status": "uploaded"}
 
 
-@student_router.post("/api/me/exams/{exam_id}/rough-sheet/none")
+@student_router.post("/api/me/exams/{exam_id}/rough-sheet/none",
+                     dependencies=[Depends(require_feature("cognitive.diagnosis"))])
 def declare_no_rough_sheet(exam_id: str,
                            student_id: str = Depends(current_student_id),
                            db_adapter: DatabaseAdapter = Depends(get_db_adapter)):
@@ -126,3 +130,17 @@ def declare_no_rough_sheet(exam_id: str,
                       "rough_sheet_uploaded_at": datetime.utcnow()}},
             session=s)
     return {"status": "none_provided"}
+
+
+@student_router.get("/api/me/exams/{exam_id}/diagnosis",
+                    dependencies=[Depends(require_feature("cognitive.diagnosis"))])
+def my_diagnosis(exam_id: str,
+                 student_id: str = Depends(current_student_id),
+                 db_adapter: DatabaseAdapter = Depends(get_db_adapter)):
+    sheet = db_adapter.db.sheets.find_one({"exam_id": exam_id, "student_id": student_id})
+    docs = []
+    if sheet:
+        docs = list(db_adapter.db.diagnostics.find(
+            {"sheet_id": sheet["_id"]},
+            {"question_number": 1, "subject": 1, "grade_revision": 1, "diagnostic": 1}))
+    return build_diagnosis_view(sheet, docs)
