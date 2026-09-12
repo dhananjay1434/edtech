@@ -27,8 +27,13 @@
     env: docker
     dockerfilePath: Dockerfile.keycloak
     envVars:
-      - key: KEYCLOAK_ADMIN
+      - key: KC_BOOTSTRAP_ADMIN_USERNAME
         sync: false
-      - key: KEYCLOAK_ADMIN_PASSWORD
+      - key: KC_BOOTSTRAP_ADMIN_PASSWORD
+        sync: false
+      # Passwords for the users seeded by infra/keycloak/cde-realm.json
+      - key: KC_SEED_ADMIN_PASSWORD
+        sync: false
+      - key: KC_SEED_STUDENT_PASSWORD
         sync: false
 

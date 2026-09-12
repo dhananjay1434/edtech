@@ -11,12 +11,10 @@ ENV KC_HOSTNAME=https://cde-auth.onrender.com
 ENV KC_PROXY_HEADERS=xforwarded
 RUN /opt/keycloak/bin/kc.sh build
 
-# Run the 148 schema changesets and the realm import at IMAGE BUILD time, so
-# the H2 database ships pre-populated in the image layer. On Render's free
-# tier those two steps alone cost ~2 min of every cold boot and pushed the
-# service past the port-scan timeout.
+# The realm is imported at RUNTIME (not baked at build time) because the
+# seeded users' passwords are ${env.KC_SEED_*_PASSWORD} placeholders that
+# only resolve against the service's runtime environment.
 COPY infra/keycloak /opt/keycloak/data/import
-RUN /opt/keycloak/bin/kc.sh import --optimized --dir /opt/keycloak/data/import
 
 ENV JAVA_OPTS_APPEND="-Xms64m -Xmx256m -XX:MetaspaceSize=64m -XX:MaxMetaspaceSize=160m -XX:TieredStopAtLevel=1 -Djava.security.egd=file:/dev/./urandom"
-CMD ["start", "--optimized"]
+CMD ["start", "--optimized", "--import-realm"]

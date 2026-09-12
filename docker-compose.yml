@@ -36,8 +36,11 @@ services:
     image: quay.io/keycloak/keycloak:26.0
     command: ["start-dev", "--import-realm"]
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      # Passwords for the users seeded by infra/keycloak/cde-realm.json
+      KC_SEED_ADMIN_PASSWORD: "${KC_SEED_ADMIN_PASSWORD:-admin}"
+      KC_SEED_STUDENT_PASSWORD: "${KC_SEED_STUDENT_PASSWORD:-student}"
     ports:
       - "8081:8080"
     volumes:
