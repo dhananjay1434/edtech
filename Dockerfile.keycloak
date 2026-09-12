@@ -1,4 +1,6 @@
 ﻿FROM quay.io/keycloak/keycloak:26.0
 COPY infra/keycloak /opt/keycloak/data/import
-ENV JAVA_OPTS_APPEND="-Xmx256m"
+ENV KC_HEALTH_ENABLED=false
+ENV KC_METRICS_ENABLED=false
+ENV JAVA_OPTS_APPEND="-Xms64m -Xmx256m -XX:MetaspaceSize=64m -XX:MaxMetaspaceSize=160m -XX:TieredStopAtLevel=1 -Djava.security.egd=file:/dev/./urandom"
 CMD ["start-dev", "--import-realm"]
