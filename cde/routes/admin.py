@@ -16,6 +16,8 @@ from cde.services.rosters import RosterImport, import_roster
 from cde.services.exams import ExamCreate, create_exam
 from cde.services.batches import create_batch
 from cde.services.identity import confirm_identity, _maybe_enqueue_grade
+from cde.features import catalog_view
+from cde.services.entitlements import read_enabled, set_enabled
 
 admin_router = APIRouter(prefix="/api/admin")
 
@@ -32,6 +34,24 @@ def verified_admin_claims(authorization: str = Header(...),
     if "admin" not in roles:
         raise HTTPException(403, "Admin role required")
     return claims
+
+
+@admin_router.get("/features")
+def get_features(claims: dict = Depends(verified_admin_claims),
+                 db_adapter: DatabaseAdapter = Depends(get_db_adapter)):
+    return {"features": catalog_view(read_enabled(db_adapter))}
+
+
+@admin_router.put("/features")
+def put_features(payload: dict = Body(...),
+                 claims: dict = Depends(verified_admin_claims),
+                 db_adapter: DatabaseAdapter = Depends(get_db_adapter)):
+    toggles = payload.get("enabled", {})
+    try:
+        enabled = set_enabled(db_adapter, toggles, actor_id=claims["sub"])
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
+    return {"features": catalog_view(enabled)}
 
 
 @admin_router.post("/rosters")

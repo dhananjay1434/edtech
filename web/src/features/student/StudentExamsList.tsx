@@ -5,22 +5,17 @@
 // which returns status only — no scores appear until a report is published.
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { authFetch } from '../../auth';
+import { listMyExams, StudentApiError } from '../../api/student';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Skeleton } from '../../components/ui/skeleton';
 import { Alert, AlertTitle, AlertDescription } from '../../components/ui/alert';
 
-interface MyExam { exam_id: string; name: string; status: 'ready' | 'processing' }
-
-async function listMyExams(): Promise<MyExam[]> {
-  const res = await authFetch('/api/me/exams');
-  if (!res.ok) throw new Error(`${res.status}`);
-  return (await res.json()).exams;
-}
-
 export function StudentExamsList() {
-  const query = useQuery({ queryKey: ['student', 'my-exams'], queryFn: listMyExams });
+  const query = useQuery({
+    queryKey: ['student', 'my-exams'],
+    queryFn: async () => (await listMyExams()).exams,
+  });
 
   return (
     <Card data-testid="student-exams-list">
@@ -34,7 +29,7 @@ export function StudentExamsList() {
           <Alert variant="destructive">
             <AlertTitle>Could not load your exams</AlertTitle>
             <AlertDescription>
-              {query.error.message === '403'
+              {query.error instanceof StudentApiError && query.error.status === 403
                 ? 'This login is not linked to a student record yet. Ask your institute admin.'
                 : 'Please try again in a moment.'}
             </AlertDescription>

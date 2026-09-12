@@ -3,9 +3,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HitlQueue } from './HitlQueue';
 import { Providers } from '../../app/providers';
-import type { CdeApi, ReviewTask, Runtime } from '../../api/contracts';
+import type { CdeApi, ReviewTask } from '../../api/contracts';
+import { makeRuntime as makeBaseRuntime } from '../../test/render';
 
-function makeRuntime(overrides: Partial<CdeApi> = {}): Runtime {
+function makeRuntime(overrides: Partial<CdeApi> = {}) {
   const task: ReviewTask = {
     id: 'task1',
     cropId: 'crop1',
@@ -19,19 +20,12 @@ function makeRuntime(overrides: Partial<CdeApi> = {}): Runtime {
     ],
     suggestedCode: 'B',
   };
-  const api: CdeApi = {
-    accessToken: async () => 'token',
-    prepareUpload: vi.fn(),
-    completeUpload: vi.fn(),
-    submissionStatus: vi.fn(),
+  return makeBaseRuntime({
     reviewQueue: vi.fn(async () => [task]),
     resolveTask: vi.fn(async () => {}),
-    studentExam: vi.fn(),
-    myExamReport: vi.fn(),
     cropBlob: vi.fn(async () => new Blob(['fake'], { type: 'image/png' })),
     ...overrides,
-  };
-  return { api, scope: 'test', portals: ['admin'], signOut: async () => {} };
+  }, ['admin']);
 }
 
 describe('HitlQueue keyboard-driven review', () => {

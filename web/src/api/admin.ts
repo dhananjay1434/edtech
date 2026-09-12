@@ -17,6 +17,20 @@ async function call<T>(path: string, options: RequestInit = {}): Promise<T> {
   return data as T;
 }
 
+import type { FeatureEntry, FeatureKey } from './student';
+
+export function getFeatures() {
+  return call<{ features: FeatureEntry[] }>('/features');
+}
+
+export function putFeatures(enabled: Partial<Record<FeatureKey, boolean>>) {
+  return call<{ features: FeatureEntry[] }>('/features', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ enabled }),
+  });
+}
+
 export interface RosterRowInput { roll_number: string; name: string }
 export interface RosterImportResult { roster_id: string; student_count: number }
 

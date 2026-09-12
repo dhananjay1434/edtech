@@ -4,6 +4,8 @@ from pymongo import ReturnDocument
 from cde.db import DatabaseAdapter, get_db_adapter
 from cde.auth import AuthorizationPort, get_auth_port
 from cde.services.accounts import resolve_student_id
+from cde.features import catalog_view
+from cde.services.entitlements import read_enabled
 
 student_router = APIRouter()
 
@@ -33,6 +35,12 @@ def current_student_id(claims: dict = Depends(verified_claims),
         return resolve_student_id(db_adapter, claims["iss"], claims["sub"])
     except PermissionError:
         raise HTTPException(403, "Account is not linked to a student")
+
+
+@student_router.get("/api/me/features")
+def my_features(student_id: str = Depends(current_student_id),
+                db_adapter: DatabaseAdapter = Depends(get_db_adapter)):
+    return {"features": catalog_view(read_enabled(db_adapter))}
 
 
 @student_router.get("/api/me/exams")

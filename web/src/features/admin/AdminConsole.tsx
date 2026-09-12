@@ -6,6 +6,7 @@ import { BatchUploadPanel } from './BatchUploadPanel';
 import { IdentityQueuePanel } from './IdentityQueuePanel';
 import { IntegerAnswersPanel } from './IntegerAnswersPanel';
 import { ExceptionsPanel } from './ExceptionsPanel';
+import { FeaturesPanel } from './FeaturesPanel';
 
 export function AdminConsole() {
   return (
@@ -22,6 +23,7 @@ export function AdminConsole() {
           <TabsTrigger value="identity">Identity</TabsTrigger>
           <TabsTrigger value="integers">Integer answers</TabsTrigger>
           <TabsTrigger value="exceptions">Exceptions</TabsTrigger>
+          <TabsTrigger value="features">Features</TabsTrigger>
         </TabsList>
         <TabsContent value="roster"><RosterImportPanel /></TabsContent>
         <TabsContent value="exam"><ExamSetupPanel /></TabsContent>
@@ -29,6 +31,7 @@ export function AdminConsole() {
         <TabsContent value="identity"><IdentityQueuePanel /></TabsContent>
         <TabsContent value="integers"><IntegerAnswersPanel /></TabsContent>
         <TabsContent value="exceptions"><ExceptionsPanel /></TabsContent>
+        <TabsContent value="features"><FeaturesPanel /></TabsContent>
       </Tabs>
     </section>
   );

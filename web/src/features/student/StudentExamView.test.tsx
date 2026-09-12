@@ -1,28 +1,18 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { StudentExamView } from './StudentExamView';
 import { Providers } from '../../app/providers';
-import type { CdeApi, MyExamReport, Runtime } from '../../api/contracts';
+import type { MyExamReport } from '../../api/contracts';
+import { makeRuntime } from '../../test/render';
 
-function makeRuntime(myExamReport: CdeApi['myExamReport']): Runtime {
-  const api: CdeApi = {
-    accessToken: async () => 'token',
-    prepareUpload: vi.fn(),
-    completeUpload: vi.fn(),
-    submissionStatus: vi.fn(),
-    reviewQueue: vi.fn(),
-    resolveTask: vi.fn(),
-    studentExam: vi.fn(),
-    myExamReport,
-    cropBlob: vi.fn(),
-  };
-  return { api, scope: 'test', portals: ['student'], signOut: async () => {} };
+function runtimeWithReport(myExamReport: () => Promise<MyExamReport>) {
+  return makeRuntime({ myExamReport });
 }
 
 describe('StudentExamView', () => {
   it('renders the processing screen with no score element while processing', async () => {
     const report: MyExamReport = { status: 'processing' };
-    const runtime = makeRuntime(async () => report);
+    const runtime = runtimeWithReport(async () => report);
 
     render(<Providers runtime={runtime}><StudentExamView examId="examV" /></Providers>);
 
@@ -45,7 +35,7 @@ describe('StudentExamView', () => {
         { question_number: 2, state: 'incorrect', awarded_marks: '-1.000', selected_option: 'C' },
       ],
     };
-    const runtime = makeRuntime(async () => report);
+    const runtime = runtimeWithReport(async () => report);
 
     render(<Providers runtime={runtime}><StudentExamView examId="examV" /></Providers>);
 
@@ -58,7 +48,7 @@ describe('StudentExamView', () => {
   });
 
   it('shows a retry action on error, never a raw error object', async () => {
-    const runtime = makeRuntime(async () => { throw new Error('network down'); });
+    const runtime = runtimeWithReport(async () => { throw new Error('network down'); });
 
     render(<Providers runtime={runtime}><StudentExamView examId="examV" /></Providers>);
 
